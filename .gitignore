@@ -1,0 +1,5 @@
+node_modules/
+db.db
+options.js
+start.bat
+.vscode/

@@ -1,0 +1,16 @@
+{
+  "name": "orangebot-js",
+  "version": "1.0.0",
+  "description": "Twitch chat bot",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js"
+  },
+  "author": "Enchanted Orange",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^5.4.0",
+    "node-fetch": "^2.3.0",
+    "tmi.js": "^1.4.2"
+  }
+}
