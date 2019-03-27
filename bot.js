@@ -1,12 +1,19 @@
 const tmi = require('tmi.js'),
-	  fetch = require('node-fetch'),
-	  options = require('./options'),
-	  db = require('better-sqlite3')('db.db');
+      fetch = require('node-fetch'),
+      options = require('./options'),
+      db = require('better-sqlite3')('db.db');
 const client = new tmi.client(options);
 
 const idle_channels = ['welovegames', 'dizzydizaster'];
 
 const prefix = options.commandPrefix;
+
+const Quiz = {
+	isActive: false,
+	variants: {},
+	users: [],
+	channel: ''
+};
 
 /*let people = {};
 options.channels.forEach((c) => {
@@ -18,30 +25,45 @@ options.channels.forEach((c) => {
 client.on('connected', () => console.log('Konnekted!'));
 
 client.on('message', (target, context, msg, self) => {
-	const displayName = context['display-name'];
-	console.log(`{${target}} <${displayName}>: ${msg}`);
+	const user = context.username;
+	console.log(`{${target}} <${user}>: ${msg}`);
 
 	if (self) return;
+
+  if (Quiz.isActive && Object.keys(Quiz.variants).includes(msg) && !Quiz.users.includes(user) && target === Quiz.channel) {
+		Quiz.variants[msg][1] += 1;
+		Quiz.users.push(user);
+  }
 
 	if (msg.startsWith(prefix)) {
 		msg = msg.split(prefix)[1];
 		if (msg.startsWith('рим')) {
-			romeTranslator(msg.split('рим ')[1], displayName, target);
+			romeTranslator(msg.split('рим ')[1], user, target);
 		} else if (msg.startsWith('кпд')) {
-			kpd(displayName, target);
+			kpd(user, target);
 		} else if (msg.startsWith('punto')) {
-			punto(msg.split('punto ')[1], displayName, target);
+			punto(msg.split('punto ')[1], user, target);
 		} else if (msg.startsWith('реверс')) {
-			reverse(msg.split('реверс ')[1], displayName, target);
+			reverse(msg.split('реверс ')[1], user, target);
 		} else if (msg.startsWith('count')) {
-			count(msg.split('count ')[1], displayName, target);
+			count(msg.split('count ')[1], user, target);
 		} else if (msg.startsWith('top')) {
-			topCount(displayName, target);
+			topCount(user, target);
 		} else if (msg.startsWith('wasted')) {
-			wasted(msg.split('wasted ')[1], displayName, target);
+			wasted(msg.split('wasted ')[1], user, target);
+		} else if (msg.startsWith('опрос')) {
+			if (options.admins.includes(user) || context.mod || context.badges.broadcaster === '1') {
+				quiz(msg.split('опрос ')[1], user, target);
+			}
+		} else if (msg.startsWith('результат')) {
+			if ((options.admins.includes(user) || context.mod || context.badges.broadcaster === '1') && Quiz.channel === target) {
+				result(user, target);
+			}
 		} else if (msg.startsWith('скажи')) {
-			say(msg.split('скажи')[1].toString(), target);
-		}
+			if (options.admins.includes(user)) {
+				say(msg.split('скажи')[1].toString(), target);
+			}
+    }
 	}
 });
 
@@ -82,7 +104,7 @@ function isForbidden(string) {
 
 
 
-function romeTranslator(num, user,target) {
+function romeTranslator(num, user, target) {
 	let result;
 
 	if (parseInt(num) < 4000) {
@@ -190,7 +212,7 @@ function count(targetUser, user, target) {
 			targetUser = targetUser.split('@')[1];
 		}
 	} else {
-		targetUser = user.toLowerCase();
+		targetUser = user;
 		isSelf = true;
 	}
 
@@ -248,6 +270,73 @@ function wasted(text, user, target) {
 		}
 	} else {
 		answer = `@${user} напишите что-нибудь`;
+	}
+
+	client.say(target, answer);
+}
+
+function quiz(text, user, target) {
+  let answer;
+	if (Quiz.isActive) {
+		answer = `@${user} опрос уже активен!`;
+	} else {
+    if (text) {
+			Quiz.channel = target;
+			let variants = [];
+
+      let i = 1;
+      text.split(' ').forEach(variant => {
+        if (!variants.includes(variant) && !isForbidden(variant)) {
+					Quiz.variants[i] = [variant, 0];
+					variants.push(variant);
+					i++;
+        }
+			});
+
+      if (variants.length <= 1) {
+        answer = `@${user} добавьте минимум два варианта, пожалуйста`;
+      } else {
+        answer = '/me Опрос начат! Варианты: ';
+
+				for (let i = 1; i <= Object.keys(Quiz.variants).length; i++) {
+					if (i < Object.keys(Quiz.variants).length) {
+						answer += `${i}. "${Quiz.variants[i][0]}", `;
+					} else {
+						answer += `${i}. "${Quiz.variants[i][0]}". Чтобы проголосовать, напишите номер варианта, чтобы закончить опрос - "!результат"`;
+					}
+				}
+
+        Quiz.isActive = true;
+      }
+    } else {
+      answer = `@${user} !опрос вариант_1 вариант_2... вариант_N`;
+    }
+	}
+	
+  client.say(target, answer);
+}
+
+function result(user, target) {
+	let answer;
+	if (Quiz.isActive) {
+		if (Quiz.users.length !== 0) {
+			answer = '/me Результаты опроса: ';
+
+			for (let i = 1; i <= Object.keys(Quiz.variants).length; i++) {
+				answer += `"${Quiz.variants[i][0]}" - ${(Quiz.variants[i][1] / Quiz.users.length * 100).toFixed(2)}%(${Quiz.variants[i][1]})`;
+				if (i < Object.keys(Quiz.variants).length) {
+					answer += ', ';
+				}
+			}
+		} else {
+			answer = `@${user} никто не проголосовал`;
+		}
+
+		Quiz.isActive = false;
+		Quiz.variants = {};
+		Quiz.users = [];
+	} else {
+		answer = `@${user} опрос не активен'`;
 	}
 
 	client.say(target, answer);
