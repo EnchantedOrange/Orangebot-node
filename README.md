@@ -36,6 +36,6 @@ where `identity` object is your bot's unique credentials,
 `commandPrefix` is prefix that users should put before bot commands,
 `admins` are users who can execute sensitive commands (usually there must be only your account).
 
-5. Launch bot.js
+5. Launch bot.js by typing `node bot.js` in the command line (you can create a .bat file with this command for easier access to the bot)
 
 Good to go!
