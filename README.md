@@ -23,6 +23,10 @@ module.exports = {
     'channelname2',
     'channelname3'
   ],
+  idleChannels: [
+    'idleChannel1',
+    'idleChannel2'
+  ],
   commandPrefix: '!',
   admins: [
     'admin1',
@@ -32,7 +36,8 @@ module.exports = {
 ```
 
 where `identity` object is your bot's unique credentials,
-`channels` list contains twitch channels to which bot will connect,
+`channels` is list that contains twitch channels to which bot will connect,
+`idleChannels` is list that contains twitch channels from which bot should only get messages, but not execute commands (idle channels must be in `channels` list too),
 `commandPrefix` is prefix that users should put before bot commands,
 `admins` are users who can execute sensitive commands (usually there must be only your account).
 
