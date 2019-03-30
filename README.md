@@ -1,8 +1,17 @@
 # Orangebot-node
 Twitch chat bot on node.js
 
-options go in separate file called 'options.js' which looks like this:
+## How to install
 
+1. Download files
+
+2. Download Node.js from https://nodejs.org/en/
+
+3. Type '''npm install''' in command line in the bot folder you downloaded.
+
+4. Make an options.js file and fill it in like below:
+
+```
 module.exports = {
   identity: {
     username: 'botname',
@@ -15,8 +24,18 @@ module.exports = {
     'channelname3'
   ],
   commandPrefix: '!',
-  admins: [ // users who can execute sensitive commands
+  admins: [
     'admin1',
     'admin2'
   ]
 };
+```
+
+where '''identity''' object is your bot's unique credentials,
+'''channels''' list contains twitch channels to which bot will connect,
+'''commandPrefix''' is prefix that users should put before bot commands,
+'''admins''' are users who can execute sensitive commands (usually there must be only your account).
+
+5. Launch bot.js
+
+Good to go!
