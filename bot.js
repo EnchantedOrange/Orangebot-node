@@ -71,7 +71,7 @@ client.on('message', (target, context, msg, self) => {
 	}
 
 	if (msg.startsWith(options.commandPrefix)) {
-		const command = msg.split(options.commandPrefix)[1].split(' ')[0];
+		const command = msg.split(options.commandPrefix)[1].split(' ')[0].toLowerCase();
 		const opts = msg.split(`${command} `)[1];
 
 		if (Duel.isActive && user === Duel.user2) {
@@ -483,7 +483,8 @@ function sayTo(text) {
 }
 
 function sourpls() {
-	client.say(globalTarget, 'sourPls ' * Math.floor(Math.random() * 20) + 10);
+	const answer = 'sourPls '.repeat(Math.floor(Math.random() * 20) + 10);
+	client.say(globalTarget, answer);
 }
 
 function slap(text, user) {
