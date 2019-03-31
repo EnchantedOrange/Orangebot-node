@@ -161,7 +161,7 @@ client.on('message', (target, context, msg, self) => {
 				break;
 			case 'help':
 			case 'команды':
-				client.say(`@${user} список команд: http://enchantedorange.co.nf/commands.html`);
+				client.say(globalTarget, `@${user} список команд: http://enchantedorange.co.nf/commands.html`);
 				break;
 			case 'off':
 				isAdmin && powerOff();
