@@ -30,11 +30,7 @@ let Quiz = {
 	channel: ''
 };
 
-let Duel = {
-	isActive: false,
-	user1: '',
-	user2: ''
-};
+let duels = [];
 
 let globalTarget;
 
@@ -74,25 +70,31 @@ client.on('message', (target, context, msg, self) => {
 		const command = msg.split(options.commandPrefix)[1].split(' ')[0].toLowerCase();
 		const opts = msg.split(`${command} `)[1];
 
-		if (Duel.isActive && user === Duel.user2) {
-			switch (command) {
-				case 'принять':
-					let winner;
+		if (duels.length > 0) {
+			for (let i = 0; i < duels.length; i++) {
+				if (user === duels[i].user2) {
+					switch (command) {
+						case 'принять':
+							let winner;
 
-					if (Math.random() >= 0.5) {
-						winner = Duel.user1;
-					} else {
-						winner = Duel.user2;
+							if (Math.random() >= 0.5) {
+								winner = duels[i].user1;
+							} else {
+								winner = duels[i].user2;
+							}
+
+							client.say(globalTarget, `${winner} победил!`);
+
+							duels.splice(i, 1);
+							break;
+						case 'отказ':
+							client.say(globalTarget, `${duels[i].user2} отказался от участия в дуэли`);
+							duels.splice(i, 1);
+							break;
 					}
 
-					client.say(globalTarget, `${winner} победил!`);
-
-					Duel.isActive = false;
 					break;
-				case 'отказ':
-					client.say(globalTarget, `${Duel.user2} отказался от участия в дуэли`);
-					Duel.isActive = false;
-					break;
+				}
 			}
 		}
 
@@ -163,6 +165,8 @@ client.on('message', (target, context, msg, self) => {
 			case 'команды':
 				client.say(globalTarget, `@${user} список команд: http://enchantedorange.co.nf/commands.html`);
 				break;
+			case 'host':
+				isAdmin && client.say('#orangebot9000', `/host ${opts}`);
 			case 'off':
 				isAdmin && powerOff();
 				break;
@@ -562,13 +566,15 @@ function benedict(user) {
 }
 
 function duel(text, user) {
-	Duel.user1 = user;
+	let newDuel = {};
 
 	if (text) {
+		newDuel.user1 = user;
+
 		if (text.includes('@')) {
-			Duel.user2 = text.split('@')[1].toLowerCase();
+			newDuel.user2 = text.split('@')[1].toLowerCase();
 		} else {
-			Duel.user2 = text.toLowerCase();
+			newDuel.user2 = text.toLowerCase();
 		}
 	} else {
 		client.say(globalTarget, `@${user} укажите пользователя, которого хотите вызвать на дуэль`);
@@ -577,9 +583,21 @@ function duel(text, user) {
 
 	let answer;
 
-	if (people[globalTarget].includes(Duel.user2)) {
-		Duel.isActive = true;
-		answer = `${Duel.user1} вызвал на дуэль ${Duel.user2}! ${Duel.user2}, чтобы принять вызов, напишите "!принять", чтобы отказаться - "!отказ"`;
+	if (people[globalTarget].includes(newDuel.user2)) {
+		duels.push(newDuel);
+
+		answer = `${newDuel.user1} вызвал на дуэль ${newDuel.user2}! ${newDuel.user2}, чтобы принять вызов, напишите "!принять", чтобы отказаться - "!отказ"`;
+
+		setTimeout(() => {
+			for (let i = 0; i < duels.length; i++) {
+				if (duels[i].user1 === newDuel.user1) {
+					client.say(globalTarget, `${duels[i].user2} проигнорировал дуэль`);
+					duels.splice(i, 1);
+					break;
+				}
+			}
+		}, 30000);
+
 	} else {
 		answer = `@${user}такого пользователя нет в чате`;
 	}
