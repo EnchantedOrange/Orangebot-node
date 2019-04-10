@@ -1,6 +1,7 @@
 const tmi = require('tmi.js'),
       fetch = require('node-fetch'),
-      options = require('./options'),
+			options = require('./options'),
+			player = require('play-sound')(opts = {player: 'mplayer'}),
       db = require('better-sqlite3')('db.db');
 const client = new tmi.client(options);
 
@@ -17,6 +18,16 @@ const lastNameList = ['Камбербэтч', 'Кукумбер', 'Кисига�
 	'Вездесрач', 'Хасавюрт', 'Чеддерчиз', 'Хэндивотч', 'Драмнбейс', 'Вымпелком', 'Данкешон',
 	'Бугенштырь', 'Кабачок', 'Стилмаймеч', 'Комбикорм', 'Минигольф', 'Кайзершнаутц',
 	'Канифоль', 'Филмайтач', 'Курткобейн', 'Кибердвач'];
+
+const romeDict = {
+ u: {'0': '', '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI', '7': 'VII', '8': 'VIII', '9': 'IX'},
+ d: {'0': '', '1': 'X', '2': 'XX', '3': 'XXX', '4': 'XL', '5': 'L', '6': 'LX', '7': 'LXX', '8': 'LXXX', '9': 'XC'},
+ h: {'0': '', '1': 'C', '2': 'CC', '3': 'CCC', '4': 'CD', '5': 'D', '6': 'DC', '7': 'DCC', '8': 'DCCC', '9': 'CM'},
+ m: {'0': '', '1': 'M', '2': 'MM', '3': 'MMM'}
+};
+
+const puntoDict = {'q':'й','w':'ц','e':'у','r':'к','t':'е','y':'н','u':'г','i':'ш','o':'щ','p':'з','[':'х',']':'ъ','a':'ф','s':'ы','d':'в','f':'а','g':'п','h':'р','j':'о','k':'л','l':'д',';':'ж','\'':'э','z':'я','x':'ч','c':'с','v':'м','b':'и','n':'т','m':'ь',',':'б','/':'.','Q':'Й','W':'Ц','E':'У','R':'К','T':'Е','Y':'Н','U':'Г','I':'Ш','O':'Щ','P':'З','{':'Х','}':'Ъ','A':'Ф','S':'Ы','D':'В','F':'А','G':'П','H':'Р','J':'О','K':'Л','L':'Д',':':'Ж','"':'Э','Z':'Я','X':'Ч','C':'С','V':'М','B':'И','N':'Т','M':'Ь','<':'Б','>':'Ю','?':',','.':'ю','@':'"','#':'№','$':';','^':':','&':'?','`':'ё','~':'Ё','й':'q','ц':'w','у':'e','к':'r','е':'t','н':'y','г':'u','ш':'i','щ':'o','з':'p','х':'[','ъ':']','ф':'a','ы':'s','в':'d','а':'f','п':'g','р':'h','о':'j','л':'k','д':'l','ж':';','э':'\'','я':'z','ч':'x','с':'c','м':'v','и':'b','т':'n','ь':'m','б':',','ю':'.','Й':'Q','Ц':'W','У':'E','К':'R','Е':'T','Н':'Y','Г':'U','Ш':'I','Щ':'O','З':'P','Х':'{','Ъ':'}','Ф':'A','Ы':'S','В':'D','А':'F','П':'G','Р':'H','О':'J','Л':'K','Д':'L','Ж':':','Э':'"','Я':'Z','Ч':'X','С':'C','М':'V','И':'B','Т':'N','Ь':'M','Б':'<','Ю':'>'};
+const wastedDict = {'Q':'Ц','W':'Ш','E':'Е','R':'Я','T':'Т','Y':'У','U':'Ю','O':'О','P':'Р','A':'А','S':'Ы','D':'Д','F':'Г','G':'Ж','H':'Н','J':'Ь','K':'К','L':'Л','Z':'З','X':'Х','C':'С','V':'В','B':'В','N':'И','M':'М','q':'ц','w':'ш','e':'е','r':'я','t':'т','y':'у','u':'ю','o':'о','p':'р','a':'а','s':'ы','d':'д','f':'г','g':'ж','h':'н','j':'ь','k':'к','l':'л','z':'з','x':'х','c':'с','v':'в','b':'в','n':'и','m':'м'};
 
 let people = {};
 options.channels.forEach(c => {
@@ -43,10 +54,18 @@ client.on('message', (target, context, msg, self) => {
 	const user = context.username;
 	console.log(`{${target}} <${user}>: ${msg}`);
 
+	msg = msg.toLowerCase();
+
 
 
 	if (self || options.idleChannels.includes(target.split('#')[1])) return;
 
+	for (let i = 0; i < options.wordsToDetect.length; i++) {
+		if (options.wordsToDetect[i].test(msg)) {
+			player.play('./media/notification.mp3');
+			break;
+		}
+	}
 
 	const isAdmin = options.admins.includes(user);
 
@@ -67,7 +86,7 @@ client.on('message', (target, context, msg, self) => {
 	}
 
 	if (msg.startsWith(options.commandPrefix)) {
-		const command = msg.split(options.commandPrefix)[1].split(' ')[0].toLowerCase();
+		const command = msg.split(options.commandPrefix)[1].split(' ')[0];
 		const opts = msg.split(`${command} `)[1];
 
 		if (duels.length > 0) {
@@ -92,7 +111,7 @@ client.on('message', (target, context, msg, self) => {
 							duels.splice(i, 1);
 							break;
 					}
-
+					
 					break;
 				}
 			}
@@ -100,7 +119,7 @@ client.on('message', (target, context, msg, self) => {
 
 		switch (command) {
 			case 'рим':
-				romeTranslator(opts, user);
+				romeTranslator(Number(opts), user);
 				break;
 			case 'кпд':
 				kpd(user);
@@ -209,25 +228,16 @@ client.on('message', (target, context, msg, self) => {
 
 client.connect();
 
-const u = {'0': '', '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI', '7': 'VII', '8': 'VIII', '9': 'IX'};
-const d = {'0': '', '1': 'X', '2': 'XX', '3': 'XXX', '4': 'XL', '5': 'L', '6': 'LX', '7': 'LXX', '8': 'LXXX', '9': 'XC'};
-const h = {'0': '', '1': 'C', '2': 'CC', '3': 'CCC', '4': 'CD', '5': 'D', '6': 'DC', '7': 'DCC', '8': 'DCCC', '9': 'CM'};
-const m = {'0': '', '1': 'M', '2': 'MM', '3': 'MMM'};
-
-const puntoDict = {'q':'й','w':'ц','e':'у','r':'к','t':'е','y':'н','u':'г','i':'ш','o':'щ','p':'з','[':'х',']':'ъ','a':'ф','s':'ы','d':'в','f':'а','g':'п','h':'р','j':'о','k':'л','l':'д',';':'ж','\'':'э','z':'я','x':'ч','c':'с','v':'м','b':'и','n':'т','m':'ь',',':'б','/':'.','Q':'Й','W':'Ц','E':'У','R':'К','T':'Е','Y':'Н','U':'Г','I':'Ш','O':'Щ','P':'З','{':'Х','}':'Ъ','A':'Ф','S':'Ы','D':'В','F':'А','G':'П','H':'Р','J':'О','K':'Л','L':'Д',':':'Ж','"':'Э','Z':'Я','X':'Ч','C':'С','V':'М','B':'И','N':'Т','M':'Ь','<':'Б','>':'Ю','?':',','.':'ю','@':'"','#':'№','$':';','^':':','&':'?','`':'ё','~':'Ё','й':'q','ц':'w','у':'e','к':'r','е':'t','н':'y','г':'u','ш':'i','щ':'o','з':'p','х':'[','ъ':']','ф':'a','ы':'s','в':'d','а':'f','п':'g','р':'h','о':'j','л':'k','д':'l','ж':';','э':'\'','я':'z','ч':'x','с':'c','м':'v','и':'b','т':'n','ь':'m','б':',','ю':'.','Й':'Q','Ц':'W','У':'E','К':'R','Е':'T','Н':'Y','Г':'U','Ш':'I','Щ':'O','З':'P','Х':'{','Ъ':'}','Ф':'A','Ы':'S','В':'D','А':'F','П':'G','Р':'H','О':'J','Л':'K','Д':'L','Ж':':','Э':'"','Я':'Z','Ч':'X','С':'C','М':'V','И':'B','Т':'N','Ь':'M','Б':'<','Ю':'>'};
-const wastedDict = {'Q':'Ц','W':'Ш','E':'Е','R':'Я','T':'Т','Y':'У','U':'Ю','O':'О','P':'Р','A':'А','S':'Ы','D':'Д','F':'Г','G':'Ж','H':'Н','J':'Ь','K':'К','L':'Л','Z':'З','X':'Х','C':'С','V':'В','B':'В','N':'И','M':'М','q':'ц','w':'ш','e':'е','r':'я','t':'т','y':'у','u':'ю','o':'о','p':'р','a':'а','s':'ы','d':'д','f':'г','g':'ж','h':'н','j':'ь','k':'к','l':'л','z':'з','x':'х','c':'с','v':'в','b':'в','n':'и','m':'м'};
-
-const forbidden = ['блять', 'блядь'];
-
 
 
 function isForbidden(string) {
 	let check = false;
-	forbidden.forEach(word => {
-		if (string.toLowerCase().includes(word)) {
+	for (let i = 0; i < options.forbiddenWords.length; i++) {
+		if (options.forbiddenWords[i].test(string)) {
 			check = true;
+			break;
 		}
-	});
+	}
 	if (check) {
 		return true;
 	} else {
@@ -240,19 +250,19 @@ function isForbidden(string) {
 function romeTranslator(num, user) {
 	let result;
 
-	if (parseInt(num) < 4000) {
+	if (num < 4000) {
 		switch (num.length) {
 			case 1:
-				result = u[num];
+				result = romeDict.u[num];
 				break;
 			case 2:
-				result = d[num[0]] + u[num[1]];
+				result = romeDict.d[num[0]] + romeDict.u[num[1]];
 				break;
 			case 3:
-				result = h[num[0]] + d[num[1]] + u[num[2]];
+				result = romeDict.h[num[0]] + romeDict.d[num[1]] + romeDict.u[num[2]];
 				break;
 			case 4:
-				result = m[num[0]] + h[num[1]] + d[num[2]] + u[num[3]];
+				result = romeDict.m[num[0]] + romeDict.h[num[1]] + romeDict.d[num[2]] + romeDict.u[num[3]];
 				break;
 		}
 	} else {
@@ -566,6 +576,7 @@ function benedict(user) {
 }
 
 function duel(text, user) {
+	const duelTarget = globalTarget;
 	let newDuel = {};
 
 	if (text) {
@@ -575,6 +586,23 @@ function duel(text, user) {
 			newDuel.user2 = text.split('@')[1].toLowerCase();
 		} else {
 			newDuel.user2 = text.toLowerCase();
+		}
+
+		if (newDuel.user1 === newDuel.user2) {
+			client.say(globalTarget, `@${user} Вы не можете вызвать на дуэль самого себя`);
+			return;
+		}
+
+		for (let i = 0; i < duels.length; i++) {
+			if (duels[i].user1 === newDuel.user1) {
+				client.say(globalTarget, `@${user} Вы уже участвуете в дуэли`);
+				return;
+			}
+
+			if (duels[i].user2 === newDuel.user2) {
+				client.say(globalTarget, `@${user} этот пользователь уже участвует в дуэли`);
+				return;
+			}
 		}
 	} else {
 		client.say(globalTarget, `@${user} укажите пользователя, которого хотите вызвать на дуэль`);
@@ -590,8 +618,8 @@ function duel(text, user) {
 
 		setTimeout(() => {
 			for (let i = 0; i < duels.length; i++) {
-				if (duels[i].user1 === newDuel.user1) {
-					client.say(globalTarget, `${duels[i].user2} проигнорировал дуэль`);
+				if (duels[i].user1 === newDuel.user1 && duels[i].user2 === newDuel.user2) {
+					client.say(duelTarget, `${duels[i].user2} проигнорировал дуэль`);
 					duels.splice(i, 1);
 					break;
 				}
@@ -599,7 +627,7 @@ function duel(text, user) {
 		}, 30000);
 
 	} else {
-		answer = `@${user}такого пользователя нет в чате`;
+		answer = `@${user} такого пользователя нет в чате`;
 	}
 
 	client.say(globalTarget, answer);
