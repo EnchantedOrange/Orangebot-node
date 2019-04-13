@@ -2,7 +2,7 @@ const tmi = require('tmi.js'),
       fetch = require('node-fetch'),
 			options = require('./options'),
 			player = require('play-sound')(opts = {player: 'mplayer'}),
-      db = require('better-sqlite3')('db.db');
+			db = require('better-sqlite3')('db.db');
 const client = new tmi.client(options);
 
 const firstNameList = ['Бенедикт', 'Бандерлог', 'Бутерброд', 'Беннихилл', 'Бандероль',
@@ -10,14 +10,15 @@ const firstNameList = ['Бенедикт', 'Бандерлог', 'Бутербр
 	'Бандергольф', 'Бандероль', 'Будапешт', 'Барбарис', 'Баклажан', 'Букерман', 'Бабблгам',
 	'Бекмамбет', 'Бартикрауч', 'Бенефактор', 'Бамблби', 'Бонифаций', 'Бадминтон', 'Барабас',
 	'Букингем', 'Варфарин', 'Баттлфилд', 'Боромир', 'Бугимен', 'Бубенец', 'Буерак', 'Бафомет',
-	'Базилик', 'Бенадрил', 'Бургеркинг', 'Бранденбург', 'Библетумб', 'Богомол', 'Бармалей', 'Баттлнет'];
+	'Базилик', 'Бенадрил', 'Бургеркинг', 'Бранденбург', 'Библетумб', 'Богомол', 'Бармалей',
+	'Баттлнет', 'Божийсын'];
 const lastNameList = ['Камбербэтч', 'Кукумбер', 'Кисигачь', 'Казантип', 'Хохлосрач',
 	'Киберскотч', 'Купидон', 'Карабас', 'Киберсвитч', 'Кёнинсберг', 'Достаньмеч', 'Корвалол',
 	'Поймалснитч', 'Брудершафт', 'Камамбер', 'Лелтопкек', 'Кандибобер', 'Кабблстоун',
 	'Когтевран', 'Визардкок', 'Коленвал', 'Контерстрайк', 'Лаггеджстор', 'Трахтенберг',
 	'Вездесрач', 'Хасавюрт', 'Чеддерчиз', 'Хэндивотч', 'Драмнбейс', 'Вымпелком', 'Данкешон',
 	'Бугенштырь', 'Кабачок', 'Стилмаймеч', 'Комбикорм', 'Минигольф', 'Кайзершнаутц',
-	'Канифоль', 'Филмайтач', 'Курткобейн', 'Кибердвач'];
+	'Канифоль', 'Филмайтач', 'Курткобейн', 'Кибердвач', 'Ктовоскрес'];
 
 const romeDict = {
  u: {'0': '', '1': 'I', '2': 'II', '3': 'III', '4': 'IV', '5': 'V', '6': 'VI', '7': 'VII', '8': 'VIII', '9': 'IX'},
@@ -31,7 +32,9 @@ const wastedDict = {'Q':'Ц','W':'Ш','E':'Е','R':'Я','T':'Т','Y':'У','U':'�
 
 let people = {};
 options.channels.forEach(c => {
-	people[c] = [];
+	if (!options.idleChannels.includes(c.split('#')[1])) {
+		people[c] = [];
+	}
 });
 
 let Quiz = {
@@ -73,10 +76,10 @@ client.on('message', (target, context, msg, self) => {
 		people[target].push(user);
 	}
 
-	const row = db.prepare(`SELECT * FROM ${target.split('#')[1]} WHERE nick = ?`).get(user);
-	if (row) {
+	try {
+		const row = db.prepare(`SELECT * FROM ${target.split('#')[1]} WHERE nick = ?`).get(user);
 		db.prepare(`UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`).run(user);
-	} else {
+	} catch(err) {
 		db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(user);
 	}
 
@@ -185,7 +188,8 @@ client.on('message', (target, context, msg, self) => {
 				client.say(globalTarget, `@${user} список команд: http://enchantedorange.co.nf/commands.html`);
 				break;
 			case 'host':
-				isAdmin && client.say('#orangebot9000', `/host ${opts}`);
+				isAdmin && hostChannel(opts);
+				break;
 			case 'off':
 				isAdmin && powerOff();
 				break;
@@ -517,7 +521,7 @@ function slap(text, user) {
 	}
 
 	const vars = [
-		`${user}дёрнул ${targetUser} за косу`,
+		`${user} дёрнул ${targetUser} за косу`,
 		`${user} задрал юбку ${targetUser}`,
 		`${user} шлёпнул ${targetUser}`,
 		`${user} напоил чаем ${targetUser}`,
@@ -693,8 +697,19 @@ function snowball(text, user) {
 	client.say(globalTarget, answer);
 }
 
+function hostChannel(text) {
+	let answer;
+	if (text) {
+		answer = text;
+	} else {
+		answer = globalTarget;
+	}
+	
+	client.say('#orangebot9000', `/host ${answer}`);
+}
+
 function powerOff() {
-	client.say(globalTarget, '/me Отключение');
+	client.say(globalTarget, '/me отключаюсь');
 	throw new Error('Бот отключён');
 }
 
@@ -764,15 +779,19 @@ function renameUser(text, user) {
 	if (text) {
 		let answer;
 
-		const oldName = text.split(' ')[0];
-		const newName = text.split(`${oldName} `)[1];
+		let oldName = text.split(' ')[0];
+		let newName = text.split(`${oldName} `)[1];
 
 		oldName = oldName.includes('@') ? oldName.split('@')[1].toLowerCase() : oldName.toLowerCase();
 		newName = newName.includes('@') ? newName.split('@')[1].toLowerCase() : newName.toLowerCase();
 
+		console.log(oldName, newName);
 		try {
 			options.channels.forEach(channel => {
-				db.prepare(`UPDATE ${channel} SET nick = ? WHERE nick = ?`).run(newName, oldName);
+				channel = channel.split('#')[1];
+				if (!options.idleChannels.includes(channel)) {
+					db.prepare(`UPDATE ${channel} SET nick = ? WHERE nick = ?`).run(newName, oldName);
+				}
 			});
 
 			answer = `@${user} пользователь ${oldName} переименован в ${newName} во всех таблицах`;
@@ -788,15 +807,16 @@ function clearDatabase(user) {
 	client.say(globalTarget, '/me Проводится очистка базы данных, пожалуйста, подождите...');
 	options.channels.forEach(channel => {
 		channel = channel.split('#')[1];
-
-		let checkUsers = [];
-		const data = db.prepare(`SELECT * FROM ${channel}`).all();
-
-		for (const chunk of data) {
-			if (checkUsers.includes(chunk.nick) || chunk.count < 2) {
-				db.prepare(`DELETE FROM ${channel} WHERE nick = ?`).run(chunk.nick);
-			} else {
-				checkUsers.push(chunk.nick);
+		if (!options.idleChannels.includes(channel)) {
+			let checkUsers = [];
+			const data = db.prepare(`SELECT * FROM ${channel}`).all();
+	
+			for (const chunk of data) {
+				if (checkUsers.includes(chunk.nick) || chunk.count < 2) {
+					db.prepare(`DELETE FROM ${channel} WHERE nick = ?`).run(chunk.nick);
+				} else {
+					checkUsers.push(chunk.nick);
+				}
 			}
 		}
 	});
@@ -809,7 +829,7 @@ function deleteUser(text, user) {
 
 	try {
 		const targetUser = text.includes('@') ? text.split('@')[1].toLowerCase() : text.toLowerCase();
-		db.prepare(`DELETE FROM ${globalTarget} WHERE nick = ?`).run(targetUser);
+		db.prepare(`DELETE FROM ${globalTarget.split('#')[1]} WHERE nick = ?`).run(targetUser);
 		answer = `@${user} пользователь ${targetUser} удалён`;
 	} catch(err) {
 		answer = `@${user} пользователь не найден`;

@@ -1,5 +1,5 @@
 {
-  "name": "orangebot-js",
+  "name": "Orangebot",
   "version": "1.0.0",
   "description": "Twitch chat bot",
   "main": "bot.js",
