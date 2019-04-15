@@ -95,22 +95,74 @@ client.on('message', (target, context, msg, self) => {
 		if (duels.length > 0) {
 			for (let i = 0; i < duels.length; i++) {
 				if (user === duels[i].user2) {
+					const user1 = duels[i].user1;
+					const user2 = duels[i].user2;
+
 					switch (command) {
 						case 'принять':
-							let winner;
-
-							if (Math.random() >= 0.5) {
-								winner = duels[i].user1;
-							} else {
-								winner = duels[i].user2;
+							function defThrow() {
+								const random = Math.random();
+								if (random < 0.33) {
+									return 'rock';
+								} else if (random >= 0.33 && random < 0.66) {
+									return 'paper';
+								} else {
+									return 'scissors';
+								}
 							}
 
-							client.say(globalTarget, `${winner} победил!`);
+							let answer;
+							const user1Throw = defThrow();
+							const user2Throw = defThrow();
+
+							switch (user1Throw) {
+								case 'rock':
+									switch (user2Throw) {
+										case 'rock':
+											answer = `Ничья! Оба игрока выбрали камень`;
+											break;
+										case 'paper':
+											answer = `${user1} выбрал камень, а ${user2} выбрал бумагу и победил!`;
+											break;
+										case 'scissors':
+											answer = `${user2} выбрал ножницы, а ${user1} выбрал камень и победил!`;
+											break;
+									}
+									break;
+								case 'paper':
+									switch (user2Throw) {
+										case 'rock':
+											answer = `${user2} выбрал камень, а ${user1} выбрал бумагу и победил!`;
+											break;
+										case 'paper':
+											answer = `Ничья! Оба игрока выбрали бумагу`;
+											break;
+										case 'scissors':
+											answer = `${user1} выбрал бумагу, а ${user2} выбрал ножницы и победил!`;
+											break;
+									}
+									break;
+								case 'scissors':
+									switch (user2Throw) {
+										case 'rock':
+											answer = `${user1} выбрал ножницы, а ${user2} выбрал камень и победил!`;
+											break;
+										case 'paper':
+											answer = `${user2} выбрал бумагу, а ${user1} выбрал ножницы и победил!`;
+											break;
+										case 'scissors':
+											answer = `Ничья! Оба игрока выбрали ножницы`;
+											break;
+									}
+									break;
+							}
+
+							client.say(globalTarget, answer);
 
 							duels.splice(i, 1);
 							break;
 						case 'отказ':
-							client.say(globalTarget, `${duels[i].user2} отказался от участия в дуэли`);
+							client.say(globalTarget, `${user2} отказался от участия в дуэли`);
 							duels.splice(i, 1);
 							break;
 					}
