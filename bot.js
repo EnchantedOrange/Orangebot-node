@@ -77,7 +77,6 @@ client.on('message', (target, context, msg, self) => {
 	}
 
 	try {
-		const row = db.prepare(`SELECT * FROM ${target.split('#')[1]} WHERE nick = ?`).get(user);
 		db.prepare(`UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`).run(user);
 	} catch(err) {
 		db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(user);
@@ -546,10 +545,10 @@ function say(text) {
 }
 
 function sayTo(text) {
-	channel = text.split(' ')[0];
+	const channel = text.split(' ')[0];
 	text = text.split(`${channel} `)[1];
 
-	client.say(`#${channel}`, text);
+	client.say(`#${channel}`, msg);
 }
 
 function sourpls() {
@@ -563,7 +562,7 @@ function slap(text, user) {
 	
 	if (text) {
 		if (!isForbidden(text)) {
-			targetUser = text.includes('@') ? text.split('@')[1] : text;
+			targetUser = text;
 		} else {
 			client.say(globalTarget, `@${user} не-а Kappa`);
 			return;
@@ -607,7 +606,7 @@ function sam(text, user) {
 
 	let answer;
 
-	if (Math.floor(Math.random() * 20) === 1) {
+	if (Math.floor(Math.random() * 20) === 3) {
 		answer = `PogChamp PogChamp PogChamp для ${targetUser} есть письмо PogChamp PogChamp PogChamp`;
 	} else {
 		answer = `для ${targetUser} писем нет`;
@@ -743,7 +742,11 @@ function snowball(text, user) {
 		}
 	} else {
 		targetUser = people[globalTarget][Math.floor(Math.random() * people[globalTarget].length)];
-		answer = defHp(targetUser);
+		if (targetUser) {
+			answer = defHp(targetUser);
+		} else {
+			answer = `@${user} error!`;
+		}
 	}
 
 	client.say(globalTarget, answer);
@@ -754,7 +757,7 @@ function hostChannel(text) {
 	if (text) {
 		answer = text;
 	} else {
-		answer = globalTarget;
+		answer = globalTarget.split('#')[1];
 	}
 	
 	client.say('#orangebot9000', `/host ${answer}`);
@@ -783,8 +786,7 @@ function deleteTable(text, user) {
 function renameTable(text, user) {
 	if (text) {
 		let answer;
-		const oldName = text.split(' ')[0];
-		const newName = text.split(`${oldName} `)[1];
+		const [oldName, newName] = text.split(' ');
 
 		try {
 			db.prepare(`ALTER TABLE ${oldName} RENAME TO ${newName}`).run();
@@ -800,8 +802,7 @@ function renameTable(text, user) {
 function messageValue(text, user) {
 	if (text) {
 		let answer;
-		let targetUser = text.split(' ')[0];
-		const messages = text.split(`${targetUser} `)[1];
+		let [targetUser, messages] = text.split(' ');
 		const target = globalTarget.split('#')[1];
 
 		targetUser = targetUser.includes('@') ? targetUser.split('@')[1].toLowerCase() : targetUser.toLowerCase();
@@ -830,9 +831,7 @@ function messageValue(text, user) {
 function renameUser(text, user) {
 	if (text) {
 		let answer;
-
-		let oldName = text.split(' ')[0];
-		let newName = text.split(`${oldName} `)[1];
+		let [oldName, newName] = text.split(' ');
 
 		oldName = oldName.includes('@') ? oldName.split('@')[1].toLowerCase() : oldName.toLowerCase();
 		newName = newName.includes('@') ? newName.split('@')[1].toLowerCase() : newName.toLowerCase();
