@@ -11,6 +11,8 @@ Twitch chat bot on node.js
 
 4. Type `npm install` in the command line in the folder you downloaded.
 
+5. Create `db.db` file with an sqlite editor, then insert a table(s) with your channel(s) name(s) into it, and in every table create 3 columns: `nick` with type TEXT, `count` with type INTEGER and `health` with type INTEGER.
+
 5. Make an options.js file and fill it in like below:
 
 ```
