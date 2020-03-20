@@ -7,9 +7,11 @@ Twitch chat bot on node.js
 
 2. Download Node.js from `https://nodejs.org/en/`.
 
-3. Type `npm install` in the command line in the folder you downloaded.
+3. Install node-gyp according to the instructions available by link: `https://www.npmjs.com/package/node-gyp`.
 
-4. Make an options.js file and fill it in like below:
+4. Type `npm install` in the command line in the folder you downloaded.
+
+5. Make an options.js file and fill it in like below:
 
 ```
 module.exports = {
@@ -61,7 +63,7 @@ where:
 
 For more information about RegExp, visit [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
 
-5. Launch bot.js by typing `node bot.js` in the command line (you can create a .bat file with this command for easier access to the bot)
+6. Launch bot.js by typing `node bot.js` in the command line (you can create a .bat file with this command for easier access to the bot)
 
 Good to go!
 
