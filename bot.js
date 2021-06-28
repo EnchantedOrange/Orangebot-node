@@ -654,7 +654,7 @@ function kpd(user) {
   fetch(`https://api.twitch.tv/kraken/users?login=${channel}`, {
     headers: {
       Accept: 'application/vnd.twitchtv.v5+json',
-      'Client-ID': options.identity.clientID,
+      'Client-ID': options.options.clientId,
     },
   })
     .then((res) => res.json())
@@ -663,7 +663,7 @@ function kpd(user) {
       fetch(`https://api.twitch.tv/kraken/channels/${id}/follows`, {
         headers: {
           Accept: 'application/vnd.twitchtv.v5+json',
-          'Client-ID': options.identity.clientID,
+          'Client-ID': options.options.clientId,
         },
       })
         .then((res) => res.json())
