@@ -1,7 +1,7 @@
 const tmi = require('tmi.js'),
   fetch = require('node-fetch'),
   options = require('./options.js'),
-  player = require('play-sound')((opts = { player: 'mplayer' })),
+  // player = require('play-sound')(opts = {}),
   Database = require('better-sqlite3'),
   {
     firstNameList,
@@ -54,12 +54,15 @@ client.on('message', (target, context, msg, self) => {
 
   if (self || options.idleChannels.includes(target.split('#')[1])) return;
 
-  for (let i = 0; i < options.wordsToDetect.length; i++) {
-    if (options.wordsToDetect[i].test(msg)) {
-      player.play('./media/notification.mp3');
-      break;
-    }
-  }
+  // for (word of options.wordsToDetect) {
+  //   if (word.test(msg)) {
+  //     console.log(word);
+  //     player.play('./media/notification.mp3', function(err) {
+  //       if (err) throw err;
+  //     });
+  //     break;
+  //   }
+  // }
 
   const isAdmin = options.admins.includes(user);
 
@@ -67,19 +70,10 @@ client.on('message', (target, context, msg, self) => {
     people[target].push(user);
   }
 
-  const stmt = db.prepare(
-    `SELECT * FROM ${target.split('#')[1]} WHERE nick = ?`
-  );
-  const result = stmt.get(user);
+  const check = db.prepare(`UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`).run(user);
 
-  if (!result) {
-    db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(
-      user
-    );
-  } else {
-    db.prepare(
-      `UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`
-    ).run(user);
+  if (check.changes === 0) {
+    db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(user);
   }
 
   if (
@@ -178,7 +172,7 @@ client.on('message', (target, context, msg, self) => {
 
     switch (command) {
       case 'рим':
-        romeTranslator(Number(opts), user);
+        romeTranslator(opts, user);
         break;
       case 'кпд':
         kpd(user);
@@ -246,7 +240,7 @@ client.on('message', (target, context, msg, self) => {
       case 'команды':
         client.say(
           globalTarget,
-          `@${user} список команд: http://enchantedorange.co.nf/commands.html`
+          `@${user} список команд: http://warrange.c1.biz/commands.html`
         );
         break;
       case 'host':
@@ -568,11 +562,11 @@ function sayTo(text) {
   const channel = text.split(' ')[0];
   text = text.split(`${channel} `)[1];
 
-  client.say(`#${channel}`, msg);
+  client.say(`#${channel}`, text);
 }
 
 function sourpls() {
-  const answer = 'sourPls '.repeat(Math.floor(Math.random() * 20) + 10);
+  const answer = 'SourPls '.repeat(Math.floor(Math.random() * 20) + 10);
   client.say(globalTarget, answer);
 }
 
@@ -703,7 +697,7 @@ function duel(text, user) {
   if (people[globalTarget].includes(newDuel.user2)) {
     duels.push(newDuel);
 
-    answer = `${newDuel.user1} вызвал на дуэль ${newDuel.user2}! ${newDuel.user2}, чтобы принять вызов, напишите "!принять", чтобы отказаться - "!отказ"`;
+    answer = `${newDuel.user1} вызвал на дуэль ${newDuel.user2}! @${newDuel.user2}, чтобы принять вызов, напишите "!принять", чтобы отказаться - "!отказ"`;
 
     setTimeout(() => {
       for (let i = 0; i < duels.length; i++) {
@@ -760,7 +754,7 @@ function snowball(text, user) {
             globalTarget.split('#')[1]
           } SET health = health - ? WHERE nick = ?`
         ).run(damage, targetUser);
-        result = `${user} бросил снежок в ${targetUser}. Его здоровье - ${
+        result = `${user} бросил снежок в ${targetUser} и снёс ${damage} здоровья. Его здоровье - ${
           hp - damage
         } <3`;
       } else {
