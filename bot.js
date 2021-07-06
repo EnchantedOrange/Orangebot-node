@@ -280,6 +280,8 @@ client.on('message', (target, context, msg, self) => {
           deleteUser(opts, user);
         }
         break;
+      case 'погода':
+        weather(opts, user);
     }
   }
 });
@@ -957,4 +959,18 @@ function deleteUser(text, user) {
   }
 
   client.say(globalTarget, answer);
+}
+
+function weather(opts, user) {
+  const uri = encodeURI(`http://api.openweathermap.org/data/2.5/weather?q=${opts}&appid=${options.owmAPIkey}&units=metric`);
+  fetch(uri)
+    .then(res => res.json())
+    .then(data => {
+      let answer;
+      data.cod === '404' ?
+        answer = `${user} город не найден` :
+        answer = `${user} погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}`;
+      client.say(globalTarget, answer);
+    })
+    .catch(rej => console.log(rej));
 }
