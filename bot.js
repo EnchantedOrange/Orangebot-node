@@ -282,6 +282,7 @@ client.on('message', (target, context, msg, self) => {
         break;
       case 'погода':
         weather(opts, user);
+        break;
     }
   }
 });
@@ -966,10 +967,21 @@ function weather(opts, user) {
   fetch(uri)
     .then(res => res.json())
     .then(data => {
-      let answer;
-      data.cod === '404' ?
-        answer = `${user} город не найден` :
-        answer = `${user} погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}`;
+      let answer = `${user} `;
+      switch (data.cod) {
+        case '404': {
+          answer += 'город не найден';
+          break;
+        }
+        case '400': {
+          answer += 'укажите город';
+          break;
+        }
+        default: {
+          answer += `погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}`;
+        }
+      }
+
       client.say(globalTarget, answer);
     })
     .catch(rej => console.log(rej));
