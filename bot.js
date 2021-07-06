@@ -331,35 +331,40 @@ function romeTranslator(num, user) {
   client.say(globalTarget, `@${user} ${result}`);
 }
 
-function kpd(user) {
+async function kpd(user) {
   const channel = globalTarget.split('#')[1];
-  fetch(`https://api.twitch.tv/kraken/users?login=${channel}`, {
-    headers: {
-      Accept: 'application/vnd.twitchtv.v5+json',
-      'Client-ID': options.options.clientId,
-    },
-  })
-    .then((res) => res.json())
-    .then((json) => {
-      const id = json.users[0]._id;
-      fetch(`https://api.twitch.tv/kraken/channels/${id}/follows`, {
-        headers: {
-          Accept: 'application/vnd.twitchtv.v5+json',
-          'Client-ID': options.options.clientId,
-        },
-      })
-        .then((res) => res.json())
-        .then((json) => {
-          const followers = json._total;
-          fetch(`https://tmi.twitch.tv/group/user/${channel}`)
-            .then((res) => res.json())
-            .then((json) => {
-              const chatters = json.chatter_count;
-              const kpd = ((chatters / followers) * 100).toFixed(2);
-              client.say(globalTarget, `@${user} ${kpd}%`);
-            });
-        });
+
+  async function getId() {
+    const data = await fetch(`https://api.twitch.tv/kraken/users?login=${channel}`, {
+      headers: {
+        Accept: 'application/vnd.twitchtv.v5+json',
+        'Client-ID': options.options.clientId,
+      }
     });
+    const json = await data.json();
+    return json.users[0]._id;
+  }
+
+  async function getFollowers() {
+    const id = await getId();
+    const data = await fetch(`https://api.twitch.tv/kraken/channels/${id}/follows`, {
+      headers: {
+        Accept: 'application/vnd.twitchtv.v5+json',
+        'Client-ID': options.options.clientId,
+      }
+    });
+    const json = await data.json();
+    return json._total;
+  }
+
+  async function getChatters() {
+    const data = await fetch(`https://tmi.twitch.tv/group/user/${channel}`);
+    const json = await data.json();
+    return json.chatter_count;
+  }
+
+  const kpd = ((await getChatters() / await getFollowers()) * 100).toFixed(2);
+  client.say(globalTarget, `@${user} ${kpd}%`);
 }
 
 function punto(text, user) {
@@ -962,27 +967,26 @@ function deleteUser(text, user) {
   client.say(globalTarget, answer);
 }
 
-function weather(opts, user) {
-  const uri = encodeURI(`http://api.openweathermap.org/data/2.5/weather?q=${opts}&appid=${options.owmAPIkey}&units=metric`);
-  fetch(uri)
-    .then(res => res.json())
-    .then(data => {
-      let answer = `${user} `;
-      switch (data.cod) {
-        case '404': {
-          answer += 'город не найден';
-          break;
-        }
-        case '400': {
-          answer += 'укажите город';
-          break;
-        }
-        default: {
-          answer += `погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}`;
-        }
-      }
+async function weather(opts, user) {
+  const uri = encodeURI(`http://api.openweathermap.org/data/2.5/weather?q=${opts}&appid=${options.owmAPIkey}&units=metric&lang=ru`);
 
-      client.say(globalTarget, answer);
-    })
-    .catch(rej => console.log(rej));
+  const res = await fetch(uri);
+  const data = await res.json();
+
+  let answer = `${user} `;
+  switch (data.cod) {
+    case '404': {
+      answer += 'город не найден';
+      break;
+    }
+    case '400': {
+      answer += 'укажите город';
+      break;
+    }
+    default: {
+      answer += `погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}, ${data.weather[0].description}`;
+    }
+  }
+
+  client.say(globalTarget, answer);
 }
