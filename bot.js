@@ -70,10 +70,16 @@ client.on('message', (target, context, msg, self) => {
     people[target].push(user);
   }
 
-  const check = db.prepare(`UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`).run(user);
+  const check = db
+    .prepare(
+      `UPDATE ${target.split('#')[1]} SET count = count + 1 WHERE nick = ?`
+    )
+    .run(user);
 
   if (check.changes === 0) {
-    db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(user);
+    db.prepare(`INSERT INTO ${target.split('#')[1]} VALUES(?, 1, 10)`).run(
+      user
+    );
   }
 
   if (
@@ -240,7 +246,7 @@ client.on('message', (target, context, msg, self) => {
       case 'команды':
         client.say(
           globalTarget,
-          `@${user} список команд: http://warrange.c1.biz/commands.html`
+          `@${user} список команд: https://enchantedorange.github.io/commands.html`
         );
         break;
       case 'host':
@@ -335,24 +341,30 @@ async function kpd(user) {
   const channel = globalTarget.split('#')[1];
 
   async function getId() {
-    const data = await fetch(`https://api.twitch.tv/kraken/users?login=${channel}`, {
-      headers: {
-        Accept: 'application/vnd.twitchtv.v5+json',
-        'Client-ID': options.options.clientId,
+    const data = await fetch(
+      `https://api.twitch.tv/kraken/users?login=${channel}`,
+      {
+        headers: {
+          Accept: 'application/vnd.twitchtv.v5+json',
+          'Client-ID': options.options.clientId,
+        },
       }
-    });
+    );
     const json = await data.json();
     return json.users[0]._id;
   }
 
   async function getFollowers() {
     const id = await getId();
-    const data = await fetch(`https://api.twitch.tv/kraken/channels/${id}/follows`, {
-      headers: {
-        Accept: 'application/vnd.twitchtv.v5+json',
-        'Client-ID': options.options.clientId,
+    const data = await fetch(
+      `https://api.twitch.tv/kraken/channels/${id}/follows`,
+      {
+        headers: {
+          Accept: 'application/vnd.twitchtv.v5+json',
+          'Client-ID': options.options.clientId,
+        },
       }
-    });
+    );
     const json = await data.json();
     return json._total;
   }
@@ -363,7 +375,9 @@ async function kpd(user) {
     return json.chatter_count;
   }
 
-  const kpd = ((await getChatters() / await getFollowers()) * 100).toFixed(2);
+  const kpd = (((await getChatters()) / (await getFollowers())) * 100).toFixed(
+    2
+  );
   client.say(globalTarget, `@${user} ${kpd}%`);
 }
 
@@ -968,7 +982,9 @@ function deleteUser(text, user) {
 }
 
 async function weather(opts, user) {
-  const uri = encodeURI(`http://api.openweathermap.org/data/2.5/weather?q=${opts}&appid=${options.owmAPIkey}&units=metric&lang=ru`);
+  const uri = encodeURI(
+    `http://api.openweathermap.org/data/2.5/weather?q=${opts}&appid=${options.owmAPIkey}&units=metric&lang=ru`
+  );
 
   const res = await fetch(uri);
   const data = await res.json();
