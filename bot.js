@@ -16,11 +16,13 @@ const db = new Database('db.db');
 const client = new tmi.Client(options);
 
 for (channel of options.channels) {
-  db.prepare(
-    `CREATE TABLE IF NOT EXISTS ${
-      channel.split('#')[1]
-    } (nick text, count INT, health INT)`
-  ).run();
+  if (!options.idleChannels.includes(channel.split('#')[1])) {
+    db.prepare(
+      `CREATE TABLE IF NOT EXISTS ${
+        channel.split('#')[1]
+      } (nick text, count INT, health INT)`
+    ).run();
+  }
 }
 
 let people = {};
@@ -495,7 +497,7 @@ function wasted(text, user) {
     });
 
     if (!isForbidden(result)) {
-      answer = `@${user} ${result}`;
+      answer = `@${user} ${result.toUpperCase()}`;
     } else {
       answer = `@${user} не-а Kappa`;
     }
@@ -663,7 +665,7 @@ function benedict(user) {
   let answer;
 
   if (firstName === 'Бенедикт' && lastName === 'Камбербэтч') {
-    answer = `PogChamp PogChamp PogChamp @${user} наконец-то правильно назвал имя великого учёного ${firstName}а ${lastName}а! Поздравьте его! PogChamp PogChamp PogChamp`;
+    answer = `PogChamp PogChamp PogChamp @${user} наконец-то правильно назвал имя великого учёного ${firstName}а ${lastName}а! PogChamp PogChamp PogChamp`;
   } else {
     answer = `${firstName} ${lastName}`;
   }
@@ -989,7 +991,7 @@ async function weather(opts, user) {
   const res = await fetch(uri);
   const data = await res.json();
 
-  let answer = `${user} `;
+  let answer = `@${user} `;
   switch (data.cod) {
     case '404': {
       answer += 'город не найден';
@@ -1000,7 +1002,7 @@ async function weather(opts, user) {
       break;
     }
     default: {
-      answer += `погода в ${data.name}: ${data.main.temp} градусов по Цельсию, чувствуется как ${data.main.feels_like}, ${data.weather[0].description}`;
+      answer += `погода в ${data.name}: ${data.main.temp} °С, чувствуется как ${data.main.feels_like} °С, ${data.weather[0].description}`;
     }
   }
 
