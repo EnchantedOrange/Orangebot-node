@@ -52,9 +52,9 @@ client.on('message', (target, context, msg, self) => {
   const user = context.username;
   console.log(`{${target}} <${user}>: ${msg}`);
 
-  msg = msg.toLowerCase();
+  if (self || options.idleChannels.includes(target.split('#')[1]) || options.blacklist[target.split('#')[1]].includes(user)) return;
 
-  if (self || options.idleChannels.includes(target.split('#')[1])) return;
+  msg = msg.toLowerCase();
 
   // for (word of options.wordsToDetect) {
   //   if (word.test(msg)) {

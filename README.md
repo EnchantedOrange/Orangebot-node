@@ -49,7 +49,13 @@ module.exports = {
     /(my)*name/,
     /(my)+lastname/,
     /mynick(name)*/
-  ]
+  ],
+
+  blacklist: {
+    'channelname1': [
+      'bad_user',
+    ],
+  },
 };
 ```
 
@@ -62,7 +68,8 @@ where:
 - `commandPrefix` is the prefix that users should type before commands,
 - `admins` are users who can execute sensitive commands (usually there must be only your account),
 - `forbiddenWords` are RegExps that describe words that you don't want the bot to say,
-- `wordsToDetect` are RegExps that describe words that, when appearing in a chat, cause the bot to play a notification sound.
+- `wordsToDetect` are RegExps that describe words that, when appearing in a chat, cause the bot to play a notification sound,
+- `blacklist` is object with channels as keys and arrays of users you dont want the bot to react to in a channel as values.
 
 For more information about RegExp, visit [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions).
 
