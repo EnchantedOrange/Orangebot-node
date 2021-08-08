@@ -52,9 +52,15 @@ client.on('message', (target, context, msg, self) => {
   const user = context.username;
   console.log(`{${target}} <${user}>: ${msg}`);
 
-  if (self || options.idleChannels.includes(target.split('#')[1]) || options.blacklist[target.split('#')[1]].includes(user)) return;
+  if (self || options.idleChannels.includes(target.split('#')[1])) return;
 
-  msg = msg.toLowerCase();
+  if (options.blacklist[target.split('#')[1]]) {
+    if (options.blacklist[target.split('#')[1]].includes(user)) {
+      return;
+    }
+  }
+
+  // msg = msg.toLowerCase();
 
   // for (word of options.wordsToDetect) {
   //   if (word.test(msg)) {
@@ -798,8 +804,8 @@ function snowball(text, user) {
 
   if (text) {
     targetUser = text.includes('@')
-      ? text.split('@')[1].toLowerCase()
-      : text.toLowerCase();
+      ? text.split('@')[1]
+      : text;
 
     if (people[globalTarget].includes(targetUser)) {
       answer = defHp(targetUser);
