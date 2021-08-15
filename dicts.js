@@ -309,8 +309,20 @@ const wastedDict = {
   m: 'м',
 };
 
+const ballList = [
+  'несомненно!',
+  'конечно да!',
+  'сомневаюсь',
+  'не думаю',
+  'нет',
+  'да',
+  'мне нужно подумать',
+  'конечно нет'
+];
+
 exports.firstNameList = firstNameList;
 exports.lastNameList = lastNameList;
 exports.romeDict = romeDict;
 exports.puntoDict = puntoDict;
 exports.wastedDict = wastedDict;
+exports.ballList = ballList;

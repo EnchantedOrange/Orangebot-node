@@ -9,6 +9,7 @@ const tmi = require('tmi.js'),
     romeDict,
     puntoDict,
     wastedDict,
+    ballList
   } = require('./dicts.js');
 
 const db = new Database('db.db');
@@ -296,6 +297,9 @@ client.on('message', (target, context, msg, self) => {
         break;
       case 'погода':
         weather(opts, user);
+        break;
+      case 'ball':
+        ball(opts, user);
         break;
     }
   }
@@ -637,6 +641,7 @@ function slap(text, user) {
     `${user} украл ${targetUser}`,
     `${user} обнял ${targetUser}`,
     `${user} пожал руку ${targetUser}`,
+    `${user} щупает ${targetUser}`,
   ];
   answer = vars[Math.floor(Math.random() * vars.length)];
 
@@ -1013,4 +1018,15 @@ async function weather(opts, user) {
   }
 
   client.say(globalTarget, answer);
+}
+
+function ball(opts, user) {
+  if (opts) {
+    const index = Math.floor(Math.random() * ballList.length);
+    const answer = ballList[index];
+
+    client.say(globalTarget, `@${user} ${answer}`);
+  } else {
+    client.say(globalTarget, `@${user} задай конкретный вопрос`);
+  }
 }
